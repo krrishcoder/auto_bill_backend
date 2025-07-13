@@ -1,106 +1,159 @@
-# 🚀 AutoBill Backend
 
-AutoBill is a backend API system designed to automate billing operations. This backend handles user requests, processes data, and integrates with OCR systems to extract and manage invoice or receipt data automatically.
+# Autobill Backend
+
+🚀 A FastAPI-based real-time object detection backend using YOLOv8 (Ultralytics), OpenCV, and WebSockets. This backend processes incoming base64-encoded image frames, runs object detection, and returns predictions over WebSocket. It also supports CORS and is designed to be integrated with frontend apps such as web-based camera feeds.
+
+👉 Live demo available on [HuggingFace Spaces](https://huggingface.co/spaces/krrishcoder07/autofill-backend)
+
+---
+
+## 📦 Features
+
+- 🧠 Object Detection using `YOLOv8` and a custom `best.pt` model
+- 📸 Image input via base64-encoded frames (e.g., from a webcam)
+- 🔁 Real-time detection via `WebSocket` connection
+- 🌐 CORS-enabled for frontend integration
+- 📦 Dockerized for easy deployment
+- 🛑 REST API endpoints to start/stop detection
+
+---
+
+## 🛠 Tech Stack
+
+- **FastAPI** — High-performance Python web framework
+- **Ultralytics YOLOv8** — Object detection
+- **OpenCV** — Image decoding and preprocessing
+- **WebSocket** — Real-time bi-directional communication
+- **Docker** — Containerization
+- **Python 3.9+**
+
+---
+
+## 🚀 Getting Started
+
+### 🔧 Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/krrishcoder/auto_bill_backend.git
+cd autobill-backend
+pip install -r requirements.txt
+```
+
+> Make sure you have `best.pt` (YOLO model weights) in the root directory.
+
+### ▶️ Run the Server
+
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+The backend will be available at: `http://localhost:8000`
+
+---
+
+## 🐳 Docker Support
+
+Build and run with Docker:
+
+```bash
+docker build -t autobill-backend .
+docker run -p 8000:8000 autobill-backend
+```
+
+---
+
+## 🔌 API Endpoints
+
+### REST API
+
+| Method | Endpoint     | Description                  |
+|--------|--------------|------------------------------|
+| `GET`  | `/`          | Health check endpoint        |
+| `GET`  | `/start`     | Start detection (toggle flag)|
+| `POST` | `/stop`      | Stop detection (toggle flag) |
+
+### WebSocket API
+
+#### `ws://localhost:8000/ws`
+
+Send base64-encoded image (as a Data URI, e.g., `"data:image/jpeg;base64,..."`) and receive real-time YOLO predictions.
+
+**Response Format:**
+
+```json
+[
+  {
+    "class_name": "cat",
+    "confidence": 0.91
+  },
+  ...
+]
+```
+
+---
 
 ## 📂 Project Structure
 
 ```
-auto_bill_backend/
-├── app/
-│   ├── api/
-│   ├── core/
-│   ├── models/
-│   ├── schemas/
-│   └── main.py
-├── .env
-├── Dockerfile
-├── requirements.txt
-└── README.md
+.
+├── app.py               # FastAPI app with WebSocket + REST endpoints
+├── best.pt              # Custom YOLOv8 weights
+├── requirements.txt     # Python dependencies
+├── Dockerfile           # Docker setup
+└── .gitattributes       # Git attributes
 ```
 
-## 🛠️ Features
+---
 
-- ✅ FastAPI for high-performance async APIs  
-- ✅ Pydantic for data validation  
-- ✅ Docker-ready for containerized deployment  
-- ✅ Modular structure: separation of routes, models, and services  
-- ✅ Environment variable configuration using `.env`
+## 🧪 Sample WebSocket Test (Python)
 
-## ⚙️ Setup Instructions
+```python
+import asyncio
+import websockets
+import base64
 
-### 1. Clone the repository
+async def send_image():
+    uri = "ws://localhost:8000/ws"
+    async with websockets.connect(uri) as websocket:
+        with open("sample.jpg", "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("utf-8")
+            data_uri = f"data:image/jpeg;base64,{encoded}"
+            await websocket.send(data_uri)
+            response = await websocket.recv()
+            print(response)
 
-```bash
-git clone https://github.com/<your-username>/auto_bill_backend.git
-cd auto_bill_backend
+asyncio.run(send_image())
 ```
 
-### 2. Create and activate a virtual environment (optional but recommended)
+---
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
+## 🧠 Model Info
 
-### 3. Install dependencies
+- The `best.pt` model is a custom-trained YOLOv8 model.
+- You can retrain or fine-tune your model using [Ultralytics](https://docs.ultralytics.com/).
 
-```bash
-pip install -r requirements.txt
-```
+---
 
-### 4. Configure environment variables
+## 🛡️ Security Note
 
-Rename `.env.example` to `.env` and configure your values (DB URL, secret keys, etc.).
+- Ensure CORS settings are configured correctly before deploying to production.
+- Validate and sanitize incoming data in production settings.
 
-### 5. Run the development server
+---
 
-```bash
-uvicorn app.main:app --reload
-```
+## 📃 License
 
-> The server will be live at `http://127.0.0.1:8000`
+This project is licensed under the MIT License.
 
-## 🐳 Run with Docker
+---
 
-### Build and run the container:
+## 👩‍💻 Author
 
-```bash
-docker build -t auto-bill-backend .
-docker run -d -p 8000:8000 --env-file .env auto-bill-backend
-```
+**krrishcoder**  
+🔗 [GitHub Profile](https://github.com/krrishcoder)
 
-## 🔍 API Documentation
+---
 
-Once the server is running, access interactive API docs at:
-
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-
-## 📦 Tech Stack
-
-- **FastAPI** – Web framework  
-- **Pydantic** – Data validation  
-- **Docker** – Containerization  
-- **Uvicorn** – ASGI server  
-- **Python 3.9+**
-
-## 📁 Future Roadmap
-
-- [ ] Add authentication support (JWT / OAuth)
-- [ ] Database integration (PostgreSQL / SQLite / MongoDB)
-- [ ] CI/CD pipeline integration
-- [ ] Testing suite with `pytest`
-
-## 🤝 Contributing
-
-Feel free to fork the repo and open pull requests. All contributions are welcome!
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/xyz`)
-3. Commit your changes (`git commit -am 'Add feature'`)
-4. Push to the branch (`git push origin feature/xyz`)
-5. Open a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+> Feel free to fork, contribute, or open issues to improve this project!
